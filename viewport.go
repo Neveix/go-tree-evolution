@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -9,7 +10,9 @@ type ViewMode byte
 const (
 	VIEWMODE_NORMAL ViewMode = iota
 	VIEWMODE_LIGHT
+	VIEWMODE_ENERGY
 )
+const viewModeCount = 3
 
 type ViewPort struct {
 	x, y, w, h int
@@ -42,21 +45,69 @@ func (viewport *ViewPort) ViewPortXToWorldX(x int) int {
 	return int(worldViewportXRatio * float64(x))
 }
 
+func makeLightDataSource() []byte {
+	datasource := make([]byte, len(world.light))
+	copy(datasource, world.light)
+	displaySym := []byte{32, 126, 61, 35}
+	for index, val := range datasource {
+		datasource[index] = displaySym[val]
+	}
+	return datasource
+}
+
+func makeEnergyDataSource() []byte {
+	ww := world.width
+	datasource := make([]byte, len(world.data))
+	for i := range datasource {
+		if world.data[i] == '#' {
+			datasource[i] = '#'
+		} else {
+			datasource[i] = ' '
+		}
+
+	}
+	var sym byte
+	var infoStr string
+	const maxInfoStrLen int = 6
+	for _, tree := range trees {
+		infoStr = fmt.Sprintf(" %d ", tree.energy)
+		infoStrLen := len(infoStr)
+		for i := 0; i < maxInfoStrLen-infoStrLen; i++ {
+			infoStr = infoStr + " "
+		}
+		for _, plant := range tree.plant {
+			if plant.y%2 == 0 {
+				sym = infoStr[plant.x%maxInfoStrLen]
+			} else {
+				sym = ' '
+			}
+			datasource[plant.y*ww+plant.x] = sym
+		}
+		for _, log := range tree.log {
+			if log.y%2 == 0 {
+				sym = infoStr[log.x%maxInfoStrLen]
+			} else {
+				sym = ' '
+			}
+			datasource[log.y*ww+log.x] = sym
+		}
+	}
+	return datasource
+}
+
 func (viewport *ViewPort) GetImage() string {
 	var buf strings.Builder
 	buf.Grow(world.width*world.height + world.height)
 
 	var datasource []byte
 
-	if viewport.viewMode == VIEWMODE_NORMAL {
+	switch viewport.viewMode {
+	case VIEWMODE_NORMAL:
 		datasource = world.data
-	} else {
-		datasource = make([]byte, len(world.light))
-		copy(datasource, world.light)
-		displaySym := []byte{32, 126, 61, 35}
-		for index, val := range datasource {
-			datasource[index] = displaySym[val]
-		}
+	case VIEWMODE_LIGHT:
+		datasource = makeLightDataSource()
+	case VIEWMODE_ENERGY:
+		datasource = makeEnergyDataSource()
 	}
 
 	sliceEnd1 := min(viewport.x+viewport.w, world.width)
@@ -65,11 +116,11 @@ func (viewport *ViewPort) GetImage() string {
 	for x := 0; x < viewport.w; x++ {
 		wX := viewport.ViewPortXToWorldX(x)
 		if viewport.x <= wX && wX <= sliceEnd1 {
-			buf.WriteByte(64)
+			buf.WriteByte('@')
 		} else if sliceEnd2 >= 0 && wX <= sliceEnd2 {
-			buf.WriteByte(64)
+			buf.WriteByte('@')
 		} else {
-			buf.WriteByte(45)
+			buf.WriteByte('-')
 		}
 	}
 	buf.WriteByte('\n')

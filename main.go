@@ -7,8 +7,8 @@ import (
 	"strconv"
 )
 
-var maxAge int = 16
-var logEnergy int = 2
+var maxAge int = 30
+var logEnergy int = 4
 
 var debug = false
 var viewportScrollSpeed = 25
@@ -38,7 +38,7 @@ func mainMenu() {
 }
 
 func createSeveralSeeds() {
-	world.CreateSeeds(80)
+	world.CreateSeeds(700)
 }
 
 func gameLoop() {
@@ -83,12 +83,8 @@ func handleUserInput() int {
 		}
 	case "m":
 		skipGameTick = true
-		switch viewport.viewMode {
-		case VIEWMODE_NORMAL:
-			viewport.viewMode = VIEWMODE_LIGHT
-		case VIEWMODE_LIGHT:
-			viewport.viewMode = VIEWMODE_NORMAL
-		}
+		viewport.viewMode = (viewport.viewMode + 1) % viewModeCount
+
 	case "q":
 		return 1
 	case "seeds":
@@ -132,7 +128,7 @@ func gameLogicLoop() {
 	}
 
 	// если ниже семечек земля, они превращаются в отростки
-	oldSeeds := []*Seed{}
+	oldSeeds := make([]*Seed, 0, len(seeds))
 
 	for _, seed := range seeds {
 		if world.Get(seed.x, seed.y+1) == '#' {
@@ -144,7 +140,8 @@ func gameLogicLoop() {
 			oldSeeds = append(oldSeeds, seed)
 		}
 	}
-	seeds = []*Seed{}
+
+	seeds = oldSeeds
 
 	// просчитывается энергия дерева
 	for _, tree := range trees {
@@ -154,7 +151,7 @@ func gameLogicLoop() {
 
 	// деревья умирают от недостатка эн.
 	// и умирают от старости
-	newTrees := []*Tree{}
+	newTrees := make([]*Tree, 0, len(trees))
 
 	for _, tree := range trees {
 		if tree.energy > 0 {
@@ -173,32 +170,25 @@ func gameLogicLoop() {
 
 	// отростки растут и прев. в древ.
 	for _, tree := range trees {
-		tree.Grow()
+		if tree.age != 1 {
+			tree.Grow()
+		}
 	}
+
+	oldSeeds = make([]*Seed, 0, len(seeds))
 
 	// семечка проверяет блок в ней, если он не воздух
 	// если снизу воздух, семена двигаются вниз
-	for _, seed := range oldSeeds {
-		if debug {
-			fmt.Println("Старое семечко проверяет что снизу и в нём...")
-		}
-		if world.CanBeOccupied(seed.x, seed.y) && world.CanBeOccupied(seed.x, seed.y+1) {
-			if debug {
-				fmt.Println("Всё норм")
-			}
-			seed.y += 1
-			seeds = append(seeds, seed)
-		}
-
-	}
-
-	// семена рендерятся
 	for _, seed := range seeds {
-		if debug {
-			fmt.Println("Семечко рендерится")
+		if world.CanBeOccupied(seed.x, seed.y) && world.CanBeOccupied(seed.x, seed.y+1) {
+			seed.y += 1
+			oldSeeds = append(oldSeeds, seed)
+			world.Set(seed.x, seed.y, '*')
 		}
-		world.Set(seed.x, seed.y, '*')
+
 	}
+
+	seeds = oldSeeds
 
 	world.PerformLightUpdates()
 

@@ -36,20 +36,22 @@ func (world *World) InitWorldData() {
 	groundYs := make([]int, w)
 
 	for i := 0; i < w; i++ {
-		maxShift := 4
+		maxShift := 10
 		if i == 0 {
 			groundYs[i] = rand.Intn(maxShift) + h - 1 - (maxShift - 1)
-		} else {
-			groundYs[i] = groundYs[i-1]
-			if rand.Intn(7) == 0 {
-				groundYs[i] += rand.Intn(3) - 1
-				if groundYs[i] > h-1 {
-					groundYs[i] = h - 1
-				}
-				if groundYs[i] < 0 {
-					groundYs[i] = 0
-				}
-			}
+			continue
+		}
+		groundYs[i] = groundYs[i-1]
+		if rand.Intn(7) != 0 {
+			continue
+		}
+		inc := (rand.Intn(3) - 1)
+		groundYs[i] += inc
+		if groundYs[i] > h-1 {
+			groundYs[i] = h - 1
+		}
+		if groundYs[i] < 0 {
+			groundYs[i] = 0
 		}
 
 	}
@@ -143,16 +145,21 @@ func (world *World) CreateSeeds(n int) {
 		if world.Get(x, y) != ' ' {
 			return
 		}
-		SeedCreate(x, y, GenomeCreate(), 260)
+		SeedCreate(x, y, GenomeCreate(), 50, true)
 	})
 }
 
+// var updateLightAtMutex sync.Mutex
+
 func (world *World) UpdateLightAt(x, y int) {
+	// updateLightAtMutex.Lock()
+
 	newValue := y + 1
 	value := world.updateLightAt[x]
 	if value == 0 || value > newValue {
 		world.updateLightAt[x] = newValue
 	}
+	// updateLightAtMutex.Unlock()
 }
 
 func (world *World) PerformLightUpdates() {

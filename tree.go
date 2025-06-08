@@ -51,6 +51,8 @@ type Tree struct {
 
 var trees = []*Tree{}
 
+// var treesMutex sync.Mutex
+
 func TreeCreate(x, y int, genome *Genome, energy int, sym byte) *Tree {
 	if energy == 0 {
 		energy = 260
@@ -63,13 +65,15 @@ func TreeCreate(x, y int, genome *Genome, energy int, sym byte) *Tree {
 		age: 0, destroyed: false,
 	}
 
+	// treesMutex.Lock()
 	trees = append(trees, &t)
+	// treesMutex.Unlock()
 
 	return &t
 }
 
 func (tree *Tree) Grow() {
-	newPlants := []Plant{}
+	newPlants := make([]Plant, 0, len(tree.plant))
 	// Создаём новые ростки и превращаем старые в древесину
 	for _, plant := range tree.plant {
 		// fmt.Printf("Обнаружен росток в %d,%d с геном %d,%d,%d,%d:\n",
@@ -138,7 +142,7 @@ func (tree *Tree) Die() {
 			} else {
 				genome = tree.genome
 			}
-			SeedCreate(plant.x, plant.y, genome, energyPie)
+			SeedCreate(plant.x, plant.y, genome, energyPie, false)
 		}
 	}
 }
@@ -147,7 +151,7 @@ func (tree *Tree) recieveEnergy() {
 	for _, log := range tree.log {
 		light1 := world.GetLight(log.x, log.y)
 
-		tree.energy += int(light1) * int(1+float64(world.height-log.y)*0.2)
+		tree.energy += int(light1) * int(10+float64(world.height-log.y)*0.2)
 	}
 }
 

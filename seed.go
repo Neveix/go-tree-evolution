@@ -8,11 +8,20 @@ type Seed struct {
 	energy int
 }
 
+const seedEnergyLight = 1000
+
 var seeds []*Seed
 
-func SeedCreate(x, y int, genome *Genome, energy int) *Seed {
+func SeedCreate(x, y int, genome *Genome, energy int, doDraw bool) *Seed {
+
+	if energy > seedEnergyLight {
+		energy = seedEnergyLight
+	}
+
 	seed := Seed{x, y, genome, energy}
-	world.Set(x, y, '*')
+	if doDraw {
+		world.Set(x, y, '*')
+	}
 
 	seeds = append(seeds, &seed)
 
