@@ -10,7 +10,7 @@ var playgroundWorldWidth, playgroundWorldHeight = 40, 20
 func playgroundReloadTree() {
 	w, h := playgroundWorldWidth, playgroundWorldHeight
 	world = WorldCreate(w, h)
-	viewport = ViewPortCreate(0, 0, w, h, world)
+	viewport = ViewPortCreate(0, 0, w, h)
 	seeds = []*Seed{}
 	trees = []*Tree{}
 	genome := activeGenome
@@ -100,10 +100,10 @@ func playgroundLogicLoop() {
 				tree.age = tree.age + 1
 			} else {
 				// tree.Die()
-				tree.Destroy(true)
+				tree.Destroy()
 			}
 		} else {
-			tree.Destroy(true)
+			tree.Destroy()
 		}
 	}
 

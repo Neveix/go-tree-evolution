@@ -8,8 +8,11 @@ import (
 )
 
 var maxAge int = 16
+var logEnergy int = 2
 
 var debug = false
+var viewportScrollSpeed = 25
+var skipGameTick = false
 var world *World
 var viewport ViewPort
 var reader = bufio.NewReader(os.Stdin)
@@ -34,52 +37,91 @@ func mainMenu() {
 	}
 }
 
+func createSeveralSeeds() {
+	world.CreateSeeds(80)
+}
+
 func gameLoop() {
-	world = WorldCreate(120, 20)
-	viewport = ViewPortCreate(0, 0, 120, 20, world)
+	world = WorldCreate(2048, 20)
+	viewport = ViewPortCreate(0, 0, 120, 20)
 	seeds = []*Seed{}
 	trees = []*Tree{}
-	world.CreateSeeds(80)
+	createSeveralSeeds()
 	for {
-		gameLogicLoop()
+		if !skipGameTick {
+			gameLogicLoop()
+		}
+		skipGameTick = false
 		fmt.Print(viewport.GetImage())
-		text := input("Команды: save/load/q(quit)/seeds/s(simulate)")
-		switch text {
-		case "save":
-			trees[0].genome.Save()
-			input("Сохранено. Нажмите для продолжения")
-		case "load":
-			if len(trees) == 0 {
-				input("Нет деревьев для загрузки")
-			} else {
-				trees[0].genome.Load()
-				input("Загружено. Нажмите для продолжения")
-			}
-		case "s":
-			stepsStr := input("Сколько шагов симулировать?")
-			steps, _ := strconv.Atoi(stepsStr)
-			for i := 0; i < steps-1; i++ {
-				gameLogicLoop()
-			}
-		case "m":
-			switch viewport.viewMode {
-			case VIEWMODE_NORMAL:
-				viewport.viewMode = VIEWMODE_LIGHT
-			case VIEWMODE_LIGHT:
-				viewport.viewMode = VIEWMODE_NORMAL
-			}
-		case "q":
+		if handleUserInput() != 0 {
 			return
-		case "seeds":
-			PrintSeedCount()
 		}
 	}
 }
 
-func gameLogicLoop() {
-	// print ("before input called")
+func handleUserInput() int {
+	inputText := "Команды: save/load/q(quit)/seeds/s(simulate)/crs(create seeds)"
+	inputText += "/l(logEnergy set)/getl(logEnergy get)/trees(tree count)"
+	text := input(inputText)
+	switch text {
+	case "save":
+		trees[0].genome.Save()
+		skipGameTick = true
+	case "load":
+		skipGameTick = true
+		if len(trees) == 0 {
+			input("Нет деревьев для загрузки")
+		} else {
+			trees[0].genome.Load()
+		}
+	case "s":
+		skipGameTick = true
+		stepsStr := input("Сколько шагов симулировать?")
+		steps, _ := strconv.Atoi(stepsStr)
+		for i := 0; i < steps; i++ {
+			gameLogicLoop()
+		}
+	case "m":
+		skipGameTick = true
+		switch viewport.viewMode {
+		case VIEWMODE_NORMAL:
+			viewport.viewMode = VIEWMODE_LIGHT
+		case VIEWMODE_LIGHT:
+			viewport.viewMode = VIEWMODE_NORMAL
+		}
+	case "q":
+		return 1
+	case "seeds":
+		skipGameTick = true
+		PrintSeedCount()
+	case "trees":
+		skipGameTick = true
+		PrintTreeCount()
+	case "crs":
+		createSeveralSeeds()
+	case "a":
+		viewport.Move(-viewportScrollSpeed, 0)
+		skipGameTick = true
+	case "d":
+		viewport.Move(viewportScrollSpeed, 0)
+		skipGameTick = true
+	case "l":
+		logEnergyStr := input("Введите новый logEnergy")
+		newLogEnergy, opError := strconv.Atoi(logEnergyStr)
+		if opError == nil {
+			logEnergy = newLogEnergy
+		} else {
+			fmt.Println("Ошибка при вводе")
+		}
+		skipGameTick = true
+	case "getl":
+		skipGameTick = true
+		input(fmt.Sprintf("logEnergy = %d\n", logEnergy))
+	}
+	return 0
+}
 
-	// world.resetlight2()
+func gameLogicLoop() {
 
 	// семена стираются
 	for _, seed := range seeds {
@@ -123,7 +165,7 @@ func gameLogicLoop() {
 				tree.Die()
 			}
 		} else {
-			tree.Destroy(true)
+			tree.Destroy()
 		}
 	}
 
@@ -157,5 +199,7 @@ func gameLogicLoop() {
 		}
 		world.Set(seed.x, seed.y, '*')
 	}
+
+	world.PerformLightUpdates()
 
 }

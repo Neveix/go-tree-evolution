@@ -5,10 +5,11 @@ import (
 )
 
 type World struct {
-	data   []byte
-	light  []byte
-	width  int
-	height int
+	data          []byte
+	light         []byte
+	width         int
+	height        int
+	updateLightAt map[int]int
 }
 
 func WorldCreate(w, h int) *World {
@@ -16,10 +17,11 @@ func WorldCreate(w, h int) *World {
 	light := make([]byte, w*h)
 
 	world := World{
-		data:   data,
-		light:  light,
-		width:  w,
-		height: h,
+		data:          data,
+		light:         light,
+		width:         w,
+		height:        h,
+		updateLightAt: map[int]int{},
 	}
 
 	world.InitWorldData()
@@ -39,7 +41,7 @@ func (world *World) InitWorldData() {
 			groundYs[i] = rand.Intn(maxShift) + h - 1 - (maxShift - 1)
 		} else {
 			groundYs[i] = groundYs[i-1]
-			if rand.Intn(5) == 0 {
+			if rand.Intn(7) == 0 {
 				groundYs[i] += rand.Intn(3) - 1
 				if groundYs[i] > h-1 {
 					groundYs[i] = h - 1
@@ -95,11 +97,7 @@ func (world *World) NormalizeCoords(x, y int) (int, int) {
 	if x < 0 {
 		x = x + world.width
 	}
-	if y < 0 {
-		y = 0
-	}
 	x %= world.width
-	y %= world.height
 	return x, y
 }
 
@@ -108,6 +106,10 @@ func (world *World) Get(x, y int) byte {
 	x, y = world.NormalizeCoords(x, y)
 	// fmt.Printf("Get(...) старые x,y = %d,%d, новые x,y=%d,%d\n", oldX, oldY, x, y)
 	return world.data[y*world.width+x]
+}
+
+func (world *World) GetLight(x, y int) byte {
+	return world.light[y*world.width+x]
 }
 
 func (world *World) Set(x, y int, value byte) {
@@ -146,6 +148,21 @@ func (world *World) CreateSeeds(n int) {
 }
 
 func (world *World) UpdateLightAt(x, y int) {
+	newValue := y + 1
+	value := world.updateLightAt[x]
+	if value == 0 || value > newValue {
+		world.updateLightAt[x] = newValue
+	}
+}
+
+func (world *World) PerformLightUpdates() {
+	for x, y := range world.updateLightAt {
+		world.PerformLightUpdate(x, y-1)
+	}
+	world.updateLightAt = map[int]int{}
+}
+
+func (world *World) PerformLightUpdate(x, y int) {
 	var light byte
 	if y == 0 {
 		light = 3
@@ -162,12 +179,8 @@ func (world *World) UpdateLightAt(x, y int) {
 				light -= 1
 			}
 		}
-		if light == world.light[world.width*y+x] {
-			// break
-		} else {
-			world.light[world.width*y+x] = light
-		}
 
+		world.light[world.width*y+x] = light
 		y++
 		if y > world.height-1 {
 			break

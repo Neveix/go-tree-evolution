@@ -103,12 +103,11 @@ func (tree *Tree) Grow() {
 	tree.plant = newPlants
 }
 
-func (tree *Tree) Destroy(cleanPlants bool) {
-	if cleanPlants {
-		for _, plant := range tree.plant {
-			world.Set(plant.x, plant.y, ' ')
-			world.UpdateLightAt(plant.x, plant.y)
-		}
+func (tree *Tree) Destroy() {
+	for _, plant := range tree.plant {
+
+		world.Set(plant.x, plant.y, ' ')
+		world.UpdateLightAt(plant.x, plant.y)
 	}
 
 	for _, log := range tree.log {
@@ -128,6 +127,7 @@ func (tree *Tree) Die() {
 			input("Уничтоженное дерево пытается ещё раз умереть!")
 		}
 	}
+	tree.Destroy()
 	if plantCount > 0 {
 		energyPie := tree.energy / plantCount
 		_ = energyPie
@@ -141,14 +141,21 @@ func (tree *Tree) Die() {
 			SeedCreate(plant.x, plant.y, genome, energyPie)
 		}
 	}
-	tree.Destroy(false)
-
 }
 
 func (tree *Tree) recieveEnergy() {
+	for _, log := range tree.log {
+		light1 := world.GetLight(log.x, log.y)
 
+		tree.energy += int(light1) * int(1+float64(world.height-log.y)*0.2)
+	}
 }
 
 func (tree *Tree) lostEnergy() {
+	logCount := len(tree.log)
+	tree.energy -= logCount * logEnergy
+}
 
+func PrintTreeCount() {
+	fmt.Printf("Tree Count: %d\n", len(trees))
 }
