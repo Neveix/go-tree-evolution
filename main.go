@@ -7,8 +7,8 @@ import (
 	"strconv"
 )
 
-var maxAge int = 30
-var logEnergy int = 4
+var maxAge int = 16
+var logEnergy int = 8
 
 var debug = false
 var viewportScrollSpeed = 25
@@ -60,8 +60,8 @@ func gameLoop() {
 }
 
 func handleUserInput() int {
-	inputText := "Команды: save/load/q(quit)/seeds/s(simulate)/crs(create seeds)"
-	inputText += "/l(logEnergy set)/getl(logEnergy get)/trees(tree count)"
+	inputText := "Команды: save/load/q(quit)/se(seed count)/s(simulate)/crs(create seeds)"
+	inputText += "/l(logEnergy)/tr(tree count)"
 	text := input(inputText)
 	switch text {
 	case "save":
@@ -84,13 +84,12 @@ func handleUserInput() int {
 	case "m":
 		skipGameTick = true
 		viewport.viewMode = (viewport.viewMode + 1) % viewModeCount
-
 	case "q":
 		return 1
-	case "seeds":
+	case "se":
 		skipGameTick = true
 		PrintSeedCount()
-	case "trees":
+	case "tr":
 		skipGameTick = true
 		PrintTreeCount()
 	case "crs":
@@ -102,7 +101,8 @@ func handleUserInput() int {
 		viewport.Move(viewportScrollSpeed, 0)
 		skipGameTick = true
 	case "l":
-		logEnergyStr := input("Введите новый logEnergy")
+		logEnergyStr := input(fmt.Sprintf("logEnergy = %d, введите новый или q",
+			logEnergy))
 		newLogEnergy, opError := strconv.Atoi(logEnergyStr)
 		if opError == nil {
 			logEnergy = newLogEnergy
@@ -110,9 +110,6 @@ func handleUserInput() int {
 			fmt.Println("Ошибка при вводе")
 		}
 		skipGameTick = true
-	case "getl":
-		skipGameTick = true
-		input(fmt.Sprintf("logEnergy = %d\n", logEnergy))
 	}
 	return 0
 }
