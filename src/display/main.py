@@ -27,7 +27,7 @@ def char_2_color(char: str) -> tuple[int, int, int]:
     if char == "#":
         return (0,0,0)
     elif char == "*":
-        return 
+        return (255, 255, 0)
     elif char == " ":
         return (255,255,255)
     if 65 <= charord <= 90:
