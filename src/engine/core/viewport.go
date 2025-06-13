@@ -36,12 +36,12 @@ func (viewport *ViewPort) Move(shiftX, shiftY int) {
 }
 
 func (viewport *ViewPort) MoveTo(x, y int) {
-	viewport.x = (x + MainWorld.width) % MainWorld.width
-	viewport.y = (y + MainWorld.height) % MainWorld.height
+	viewport.x = (x + MainWorld.Width) % MainWorld.Width
+	viewport.y = (y + MainWorld.Height) % MainWorld.Height
 }
 
 func (viewport *ViewPort) ViewPortXToWorldX(x int) int {
-	worldViewportXRatio := float64(MainWorld.width) / float64(viewport.w)
+	worldViewportXRatio := float64(MainWorld.Width) / float64(viewport.w)
 	return int(worldViewportXRatio * float64(x))
 }
 
@@ -56,7 +56,7 @@ func makeLightDataSource() []byte {
 }
 
 func makeEnergyDataSource() []byte {
-	ww := MainWorld.width
+	ww := MainWorld.Width
 	datasource := make([]byte, len(MainWorld.data))
 	for i := range datasource {
 		if MainWorld.data[i] == '#' {
@@ -97,7 +97,7 @@ func makeEnergyDataSource() []byte {
 
 func (viewport *ViewPort) GetImage() string {
 	var buf strings.Builder
-	buf.Grow(MainWorld.width*MainWorld.height + MainWorld.height)
+	buf.Grow(MainWorld.Width*MainWorld.Height + MainWorld.Height)
 
 	var datasource []byte
 
@@ -110,8 +110,8 @@ func (viewport *ViewPort) GetImage() string {
 		datasource = makeEnergyDataSource()
 	}
 
-	sliceEnd1 := min(viewport.x+viewport.w, MainWorld.width)
-	sliceEnd2 := viewport.x + viewport.w - MainWorld.width
+	sliceEnd1 := min(viewport.x+viewport.w, MainWorld.Width)
+	sliceEnd2 := viewport.x + viewport.w - MainWorld.Width
 
 	for x := 0; x < viewport.w; x++ {
 		wX := viewport.ViewPortXToWorldX(x)
@@ -129,7 +129,7 @@ func (viewport *ViewPort) GetImage() string {
 		// for shift_x := 0; shift_x < viewport.w; shift_x++ {
 		// 	buf.WriteByte(MainWorld.Get(viewport.x+shift_x, viewport.y+shift_y))
 		// }
-		shiftY := y * MainWorld.width
+		shiftY := y * MainWorld.Width
 
 		buf.Write(datasource[viewport.x+shiftY : sliceEnd1+shiftY])
 

@@ -36,8 +36,8 @@ func createSeveralSeeds() {
 }
 
 func initGame() {
-	core.MainWorld = core.WorldCreate(2048, 20)
-	viewport = core.ViewPortCreate(0, 0, 120, 20)
+	core.MainWorld = core.WorldCreate(2048, 20*4)
+	viewport = core.ViewPortCreate(0, 0, 120, core.MainWorld.Height)
 	core.Seeds = []*core.Seed{}
 	core.Trees = []*core.Tree{}
 	createSeveralSeeds()

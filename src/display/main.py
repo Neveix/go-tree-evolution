@@ -76,6 +76,10 @@ class ImageEditor:
                                   command=self.toggle_gameloop_running)
         self.load_btn.pack(side=tk.LEFT, padx=5)
         
+        self.reset_btn = tk.Button(self.btn_frame, text="Рестарт", 
+                                  command=self.reset_world)
+        self.reset_btn.pack(side=tk.LEFT, padx=5)
+        
         self.log_energy_slider = tk.Scale(
             self.btn_frame,
             from_=0,  
@@ -123,7 +127,7 @@ class ImageEditor:
     
     def periodic_task(self):
         try:
-            resp = requests.get("http://127.0.0.1:8080/api/viewport/getImage")
+            resp = requests.get("http://127.0.0.1:8080/api/getImage")
             image_string = loads(resp.text)["text"]
             
             try:
@@ -143,7 +147,7 @@ class ImageEditor:
 
         self.root.after(50, self.periodic_task)
     
-    def load_image(self, image_data: ViewPortImage, scale=12):
+    def load_image(self, image_data: ViewPortImage, scale=8):
         """Загружает изображение из массива байтов [width, height, r0, g0, b0, ...]"""
         width, height = image_data.width, image_data.height
         
@@ -168,11 +172,11 @@ class ImageEditor:
         self.canvas.config(width=new_width, height=new_height)
     
     def toggle_gameloop_running(self):
-        requests.post("http://127.0.0.1:8080/api/counter/toggleGameLoopRunning", 
+        requests.post("http://127.0.0.1:8080/api/toggleGameLoopRunning", 
                       timeout=1)
         
     def log_energy_changed(self, text: str):
-        url = "http://127.0.0.1:8080/api/counter/changeLogEnergy"
+        url = "http://127.0.0.1:8080/api/changeLogEnergy"
         headers = {"Content-Type": "application/json"}
         data = {"LogEnergy": int(text)}
 
@@ -180,7 +184,7 @@ class ImageEditor:
                                  timeout=0.2)
         
     def max_age_changed(self, text: str):
-        url = "http://127.0.0.1:8080/api/counter/changeMaxAge"
+        url = "http://127.0.0.1:8080/api/changeMaxAge"
         headers = {"Content-Type": "application/json"}
         data = {"MaxAge": int(text)}
 
@@ -188,11 +192,18 @@ class ImageEditor:
                                  timeout=0.2)
         
     def game_speed_changed(self, text: str):
-        url = "http://127.0.0.1:8080/api/counter/changeGameSpeed"
+        url = "http://127.0.0.1:8080/api/changeGameSpeed"
         headers = {"Content-Type": "application/json"}
         data = {"GameSpeed": int(text)}
 
         requests.post(url, json=data, headers=headers, 
+                                 timeout=0.2)
+        
+    def reset_world(self):
+        url = "http://127.0.0.1:8080/api/resetWorld"
+        headers = {"Content-Type": "application/json"}
+
+        requests.post(url, headers=headers, 
                                  timeout=0.2)
 
         

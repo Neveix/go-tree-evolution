@@ -7,8 +7,8 @@ import (
 type World struct {
 	data          []byte
 	light         []byte
-	width         int
-	height        int
+	Width         int
+	Height        int
 	updateLightAt map[int]int
 }
 
@@ -19,8 +19,8 @@ func WorldCreate(w, h int) *World {
 	world := World{
 		data:          data,
 		light:         light,
-		width:         w,
-		height:        h,
+		Width:         w,
+		Height:        h,
 		updateLightAt: map[int]int{},
 	}
 
@@ -31,7 +31,7 @@ func WorldCreate(w, h int) *World {
 }
 
 func (world *World) InitWorldData() {
-	w, h := world.width, world.height
+	w, h := world.Width, world.Height
 
 	groundYs := make([]int, w)
 
@@ -73,9 +73,9 @@ func (world *World) InitWorldData() {
 
 func (world *World) InitWorldLight() {
 	var index int
-	for y := 0; y < world.height; y++ {
-		for x := 0; x < world.width; x++ {
-			index = y*world.width + x
+	for y := 0; y < world.Height; y++ {
+		for x := 0; x < world.Width; x++ {
+			index = y*world.Width + x
 			if world.CanBeOccupied(x, y) {
 				world.light[index] = 3
 			} else {
@@ -89,7 +89,7 @@ func (world *World) CoordinatesAreOutside(x, y int) bool {
 	if y < 0 {
 		return true
 	}
-	if y >= world.height {
+	if y >= world.Height {
 		return true
 	}
 	return false
@@ -97,9 +97,9 @@ func (world *World) CoordinatesAreOutside(x, y int) bool {
 
 func (world *World) NormalizeCoords(x, y int) (int, int) {
 	if x < 0 {
-		x = x + world.width
+		x = x + world.Width
 	}
-	x %= world.width
+	x %= world.Width
 	return x, y
 }
 
@@ -107,21 +107,21 @@ func (world *World) Get(x, y int) byte {
 	// oldX, oldY := x, y
 	x, y = world.NormalizeCoords(x, y)
 	// fmt.Printf("Get(...) старые x,y = %d,%d, новые x,y=%d,%d\n", oldX, oldY, x, y)
-	return world.data[y*world.width+x]
+	return world.data[y*world.Width+x]
 }
 
 func (world *World) GetLight(x, y int) byte {
-	return world.light[y*world.width+x]
+	return world.light[y*world.Width+x]
 }
 
 func (world *World) Set(x, y int, value byte) {
 	x, y = world.NormalizeCoords(x, y)
-	world.data[y*world.width+x] = value
+	world.data[y*world.Width+x] = value
 }
 
 func (world *World) IndexToXY(index int) (x, y int) {
-	x = index % world.width
-	y = index / world.width
+	x = index % world.Width
+	y = index / world.Width
 	return
 }
 
@@ -141,7 +141,7 @@ func (world *World) CanBeOccupied(x, y int) bool {
 
 func (world *World) CreateSeeds(n int) {
 	Repeat(n, func(i int) {
-		x, y := rand.Intn(world.width), rand.Intn(world.height-1)
+		x, y := rand.Intn(world.Width), rand.Intn(world.Height-1)
 		if world.Get(x, y) != ' ' {
 			return
 		}
@@ -174,7 +174,7 @@ func (world *World) PerformLightUpdate(x, y int) {
 	if y == 0 {
 		light = 3
 	} else {
-		light = world.light[world.width*(y-1)+x]
+		light = world.light[world.Width*(y-1)+x]
 	}
 	for {
 		if world.CanBeOccupied(x, y) {
@@ -187,9 +187,9 @@ func (world *World) PerformLightUpdate(x, y int) {
 			}
 		}
 
-		world.light[world.width*y+x] = light
+		world.light[world.Width*y+x] = light
 		y++
-		if y > world.height-1 {
+		if y > world.Height-1 {
 			break
 		}
 	}

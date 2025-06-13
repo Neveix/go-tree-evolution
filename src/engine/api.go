@@ -22,20 +22,21 @@ func RunAPI() {
 	go gameLoopGoro()
 
 	// Регистрируем обработчики
-	http.HandleFunc("/api/viewport/getImage",
+	http.HandleFunc("/api/getImage",
 		getViewPortImage)
-	http.HandleFunc("/api/viewport/getAllGameInfo",
+	http.HandleFunc("/api/getAllGameInfo",
 		getAllGameInfo)
 
-	http.HandleFunc("/api/counter/toggleGameLoopRunning",
+	http.HandleFunc("/api/toggleGameLoopRunning",
 		toggleGameLoopRunning)
-	http.HandleFunc("/api/counter/changeLogEnergy",
+	http.HandleFunc("/api/changeLogEnergy",
 		changeLogEnergy)
-	http.HandleFunc("/api/counter/changeMaxAge",
+	http.HandleFunc("/api/changeMaxAge",
 		changeMaxAge)
-	http.HandleFunc("/api/counter/changeGameSpeed",
+	http.HandleFunc("/api/changeGameSpeed",
 		changeGameSpeed)
-
+	http.HandleFunc("/api/resetWorld",
+		resetWorld)
 	// Запускаем сервер
 	log.Println("Server starting on :8080...")
 	log.Fatal(http.ListenAndServe(":8080", nil))
@@ -190,6 +191,21 @@ func changeGameSpeed(w http.ResponseWriter, r *http.Request) {
 	gameLoopMutex.Lock()
 	GameSpeed = requestBody.GameSpeed
 	fmt.Printf("GameSpeed было изменено на %d\n", GameSpeed)
+	gameLoopMutex.Unlock()
+
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprint(w, `{"message": "success}`)
+}
+
+func resetWorld(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	gameLoopMutex.Lock()
+	initGame()
+	fmt.Printf("Мир был ресетнут \n")
 	gameLoopMutex.Unlock()
 
 	w.Header().Set("Content-Type", "application/json")

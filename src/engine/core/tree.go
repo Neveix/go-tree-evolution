@@ -151,7 +151,7 @@ func (tree *Tree) RecieveEnergy() {
 	for _, log := range tree.log {
 		light1 := MainWorld.GetLight(log.x, log.y)
 
-		tree.Energy += int(light1) * int(10+float64(MainWorld.height-log.y)*0.2)
+		tree.Energy += int(light1) * int(10+float64(MainWorld.Height-log.y)*0.2)
 	}
 }
 
