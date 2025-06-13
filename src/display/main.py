@@ -1,4 +1,5 @@
 from json import loads
+from time import sleep
 import tkinter as tk
 from tkinter import filedialog
 from PIL import Image, ImageTk, ImageDraw
@@ -25,11 +26,11 @@ def interpolate_color(t: float) -> tuple[int, int, int]:
 def char_2_color(char: str) -> tuple[int, int, int]:
     charord = ord(char)
     if char == "#":
-        return (0,0,0)
+        return (36, 29, 20)
     elif char == "*":
-        return (255, 255, 0)
+        return (177, 166, 77)
     elif char == " ":
-        return (255,255,255)
+        return (120, 176, 232)
     if 65 <= charord <= 90:
         t = (charord - 65) / 26
         return interpolate_color(t)
@@ -72,8 +73,45 @@ class ImageEditor:
         self.btn_frame.pack(pady=10)
         
         self.load_btn = tk.Button(self.btn_frame, text="Пауза", 
-                                  command=self.toggleGameLoopRunning)
+                                  command=self.toggle_gameloop_running)
         self.load_btn.pack(side=tk.LEFT, padx=5)
+        
+        self.log_energy_slider = tk.Scale(
+            self.btn_frame,
+            from_=0,  
+            to=22,    
+            orient=tk.HORIZONTAL,  
+            length=300, 
+            command=self.log_energy_changed, 
+            label="Energy lost per log" 
+        )
+        
+        self.log_energy_slider.set(8)
+        self.log_energy_slider.pack(pady=20)
+        
+        self.max_age_slider = tk.Scale(
+            self.btn_frame,
+            from_=2,
+            to=40,  
+            orient=tk.HORIZONTAL, 
+            length=300,  
+            command=self.max_age_changed, 
+            label="Max Age" 
+        )
+        self.max_age_slider.set(16)
+        self.max_age_slider.pack(pady=20)
+        
+        self.game_speed_slider = tk.Scale(
+            self.btn_frame,
+            from_=1,
+            to=1_000_000,  
+            orient=tk.HORIZONTAL, 
+            length=300,  
+            command=self.game_speed_changed, 
+            label="Game Speed" 
+        )
+        self.game_speed_slider.set(1)
+        self.game_speed_slider.pack(pady=20)
         
         # Переменные для хранения изображения
         self.image = None
@@ -129,9 +167,33 @@ class ImageEditor:
         self.canvas.create_image(0, 0, anchor="nw", image=self.tk_image)
         self.canvas.config(width=new_width, height=new_height)
     
-    def toggleGameLoopRunning(self):
-        requests.post("http://127.0.0.1:8080/api/counter/toggleGameLoopRunning")
+    def toggle_gameloop_running(self):
+        requests.post("http://127.0.0.1:8080/api/counter/toggleGameLoopRunning", 
+                      timeout=1)
+        
+    def log_energy_changed(self, text: str):
+        url = "http://127.0.0.1:8080/api/counter/changeLogEnergy"
+        headers = {"Content-Type": "application/json"}
+        data = {"LogEnergy": int(text)}
 
+        requests.post(url, json=data, headers=headers, 
+                                 timeout=0.2)
+        
+    def max_age_changed(self, text: str):
+        url = "http://127.0.0.1:8080/api/counter/changeMaxAge"
+        headers = {"Content-Type": "application/json"}
+        data = {"MaxAge": int(text)}
+
+        requests.post(url, json=data, headers=headers, 
+                                 timeout=0.2)
+        
+    def game_speed_changed(self, text: str):
+        url = "http://127.0.0.1:8080/api/counter/changeGameSpeed"
+        headers = {"Content-Type": "application/json"}
+        data = {"GameSpeed": int(text)}
+
+        requests.post(url, json=data, headers=headers, 
+                                 timeout=0.2)
 
         
 if __name__ == "__main__":
